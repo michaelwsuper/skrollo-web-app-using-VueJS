@@ -1,0 +1,5 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target" : { "namespace": "android_app", "package_name": "com.app.skrollo",
+               "sha256_cert_fingerprints": ["0E:A2:81:B1:44:BF:56:93:E3:75:8D:28:18:26:1D:B9:AE:A7:0C:45:86:5D:D7:B5:E6:D5:82:82:C6:CE:4B:83"] }
+}]

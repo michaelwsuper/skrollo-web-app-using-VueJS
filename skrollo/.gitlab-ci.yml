@@ -1,0 +1,28 @@
+image: node:11.13.0-alpine
+
+variables:
+  AWS_DEFAULT_REGION: us-west-2 # The region of our S3 bucket
+  BUCKET_NAME: develop.skrollo.com    # Your bucket name
+
+build:
+  stage: build
+  script:
+    - cd skrollo
+    - npm install
+    - npm run generate
+  cache:
+    paths:
+      - skrollo/node_modules/
+  artifacts:
+    paths:
+      - skrollo/dist/
+
+deploy:
+  image: "python:latest"
+  stage: deploy
+  dependencies:
+    - build
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 cp skrollo/dist/ s3://${BUCKET_NAME} --recursive

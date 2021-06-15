@@ -1,0 +1,2 @@
+// "dev": "cross-env NODE_ENV=development API_URI=https://api.skrollo.com REDIS_HOST=192.168.99.100 nodemon server/index.js --watch server",
+    

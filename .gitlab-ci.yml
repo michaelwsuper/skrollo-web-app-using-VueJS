@@ -1,0 +1,81 @@
+image: node:11.13.0-alpine
+
+variables:
+  AWS_DEFAULT_REGION: us-west-2 # The region of our S3 bucket
+  BUCKET_NAME: develop.skrollo.com    # Your bucket name
+
+build:
+  stage: build
+  script:
+    - cd skrollo
+    - npm install
+    - npm run generate
+  cache:
+    paths:
+      - skrollo/node_modules/
+  artifacts:
+    paths:
+      - skrollo/dist/
+# Deploy all
+deploy:
+  image: "python:latest"
+  stage: deploy
+  dependencies:
+    - build
+  except:
+    refs:
+        - "master"
+        - "staging"
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 cp skrollo/dist/ s3://${BUCKET_NAME} --recursive
+  environment:
+    name: ${CI_COMMIT_REF_SLUG}
+    url: http://${BUCKET_NAME}.s3-website.${AWS_DEFAULT_REGION}.amazonaws.com
+    on_stop: clean_s3
+
+# Remove deployment if required
+clean_s3:
+  image: "python:latest"
+  stage: deploy
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 rm s3://${BUCKET_NAME}/${CI_COMMIT_REF_SLUG} --recursive
+  environment:
+    name: ${CI_COMMIT_REF_SLUG}
+    action: stop
+  when: manual
+
+deploy_staging:
+  image: "python:latest"
+  stage: deploy
+  only:
+    refs:
+      - "staging"
+  dependencies:
+    - build
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 cp skrollo/dist/ s3://staging.skrollo.com --recursive
+  environment:
+    name: staging
+    url: http://staging.skrollo.com
+
+deploy_prod:
+  image: "python:latest"
+  stage: deploy
+  only:
+    refs:
+      - "master"
+  dependencies:
+    - build
+  before_script:
+    - pip install awscli
+  script:
+    - aws s3 cp skrollo/dist/ s3://skrollo.com --recursive
+  environment:
+    name: staging
+    url: http://skrollo.com
